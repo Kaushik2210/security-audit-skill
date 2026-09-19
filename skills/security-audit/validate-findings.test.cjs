@@ -426,7 +426,14 @@ test("returns a generic syntax error without parser-supplied controls", { skip: 
   assertNoInjectedControlBytes(result.stderr);
 });
 
-test("does not reflect controls from a failed CLI input path", () => {
+test("CLI fails closed when the OS cannot open input safely", { skip: HAS_SAFE_INPUT_OPEN }, () => {
+  const result = runCli(JSON.stringify(producerShapedFindings()));
+  assert.equal(result.status, 1, cliOutput(result));
+  assert.match(result.stderr, /OS no-follow and nonblocking input protection is unavailable/);
+  assertNoInjectedControlBytes(result.stderr);
+});
+
+test("does not reflect controls from a failed CLI input path", { skip: !HAS_SAFE_INPUT_OPEN }, () => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), "validate-findings-path-"));
   const missingPath = path.join(directory, `missing-${TERMINAL_CONTROL_PAYLOAD}.json`);
   try {
